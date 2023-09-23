@@ -11,8 +11,9 @@ from Weather import Weather_ # Погода
 from Converter import Convert_ # Конвертер
 import smtplib
 import requests # Запросы
+from Key import KEY # Api ключ
 
-KEY = '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' # Open-ai ключ
+
 MASTER = "Altman"
 openai.api_key = KEY
 
