@@ -1,17 +1,20 @@
 import pyttsx3  # pip install pyttsx3
-import speech_recognition as sr  # pip install speechRecognition
-import datetime
-import wikipedia  # pip install wikipedia
+import speech_recognition as sr  # Распознование речи
+import datetime # Текущее время
+import openai # AI
+import wikipedia  # WIKI модуль
 import webbrowser
-import os
-import Alarm
-import Weather
-import Converter
-import Functions
+import os # Управление системой
+import json # json разметка
+from Alarm import Alarm_ #Будильник
+from Weather import Weather_ # Погода
+from Converter import Convert_ # Конвертер
 import smtplib
+import requests # Запросы
 
-print("Initializing Grace")
+KEY = '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' # Open-ai ключ
 MASTER = "Altman"
+openai.api_key = KEY
 
 engine = pyttsx3.init('sapi5')
 voices = engine.getProperty('voices')
@@ -38,16 +41,8 @@ def wishMe():
     else:
         speak("good Evening" + MASTER)
 
+    print("i am your assistant. How may I help you?")
     speak("i am your assistant. How may I help you?")
-wishMe()
-
-def sendEmail(to, content):
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.ehlo()
-    server.starttls()
-    server.login('kumaraman.rose@gmail.ocm', 'password')
-    server.sendmail("harry@gmail.com", to, content)
-    server.close()
 
 
 # This function will take command from the microphone
@@ -59,7 +54,7 @@ def takeCommand():
 
     try:
         print("Recognizing...")
-        query = r.recognize_google(audio, language='en-in')
+        query = r.recognize_google(audio, language='ru')
         print(f"user said: {query}\n")
 
     except Exception as e:
@@ -69,27 +64,70 @@ def takeCommand():
     return query
 
 
+def generate_response(text):
+    response = openai.Completion.create(
+        prompt = text,
+        engine = 'text-davinci-003',
+        max_tokens = 500,
+        temperature = 0.5,
+        n = 1,
+        stop = None,
+        timeout = 15
+    )
+    if response and response.choices:
+        return response.choices[0].text.strip()
+    else:
+        return None
+
+
+def generate_Dalle(message):
+    url = 'https://api.openai.com/v1/images/generations'
+
+    headers = {
+        'Authorization': f'Bearer {KEY}',
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.post(url, json={'prompt': message}, headers=headers)
+
+    if response.status_code ==200:
+        result = response.json()
+        print(result)
+    else:
+        print('Error', response.text)
+
+
+def AI():
+    speak('Добрый вечер, Altman')
+    query = takeCommand()
+    res = generate_response(f'Ты мой виртуальный помощник Grace. Кто ты?{query}')
+    print(res)
+    speak(res)
+
+
+def AI_DALLE():
+    speak('Добрый вечер, Altman')
+    query = takeCommand()
+    #text = input()
+    generate_Dalle(query)
+
 # main program starting
 def main():
     speak("Initializing Grace...")
     print('''
     commands:
     1)Wikipedia
-    2)Open youtube
-    3)Play music
     4)Time
     5)Alarm
-    6)Function
     7)Converter
     7)Weather
     8)Joke
-    9)Advice
-    10)News
-    11)Trending movies
+    #9)Advice
+    #10)News
+    #11)Trending movies
     
           ''')
     query = takeCommand()
-    main()
 
     # Logic for executing tasks as per the query
     if 'wikipedia' in query.lower():
@@ -99,63 +137,56 @@ def main():
         print(results)
         speak(results)
 
-    elif 'open youtube' in query.lower():
-        # webbrowser.open('youtube.com')
-        url = "youtube.com"
-        chrome_path = 'c:/program Files (x86)/Google/Chrome/Application/chrome.exe %s'
-        webbrowser.get(chrome_path).open(url)
-
-    elif 'open google' in query.lower():
-        # webbrowser.open('youtube.com')
-        url = "google.com"
-        chrome_path = 'c:/program Files (x86)/Google/Chrome/Application/chrome.exe %s'
-        webbrowser.get(chrome_path).open(url)
-
-    elif 'play music' in query.lower():
-        songs_dir = "C:\\Users\\Dell\\Desktop\\Photos\\audio"
-        songs = os.listdir(songs_dir)
-        print(songs)
-        os.startfile(os.path.join(songs_dir, songs[0]))
 
     elif 'the time' in query.lower():
         strTime = datetime.datetime.now().strftime("%H:%M:%S")
         speak(f"{MASTER} the time is {strTime}")
 
-    elif 'Alarm' in query.lower():
-        run_Alarm()
+
+    elif 'alarm' in query.lower():
+        Alarm_.run_Alarm()
 
     elif 'Converter' in query.lower():
-        import Converter
+        Converter.Convert_()
 
-    elif 'Function' in query.lower():
-        import Converter
 
     elif 'Weather' in query.lower():
-        import Weather
+        Weather.Weather_()
+
+
+    elif 'AI Dalle' in query.lower():
+        AI_DALLE()
+
+
+    elif 'AI' in query.lower():
+        AI_()
+
 
     elif 'joke' in query.lower():
             speak(f"Hope you like this one sir")
-            joke = get_random_joke()
-            speak(joke)
-            speak("For your convenience, I am printing it on the screen sir.")
-            print(joke)
+            headers = {
+            'Accept': 'application/json'
+            }
+            res = requests.get("https://icanhazdadjoke.com/", headers=headers).json()
+            return res["joke"]
 
-    elif "advice" in query.lower():
-            speak(f"Here's an advice for you, sir")
-            advice = get_random_advice()
-            speak(advice)
-            speak("For your convenience, I am printing it on the screen sir.")
-            print(advice)
+    # elif "advice" in query.lower():
+    #         speak(f"Here's an advice for you, sir")
+    #         advice = get_random_advice()
+    #         speak(advice)
+    #         speak("For your convenience, I am printing it on the screen sir.")
+    #         print(advice)
+    #
+    # elif "trending movies" in query.lower():
+    #     speak(f"Some of the trending movies are: {get_trending_movies()}")
+    #     speak("For your convenience, I am printing it on the screen sir.")
+    #     print(*get_trending_movies(), sep='\n')
+    #
+    # elif 'news' in query.lower():
+    #     speak(f"I'm reading out the latest news headlines, sir")
+    #     speak(get_latest_news())
+    #     speak("For your convenience, I am printing it on the screen sir.")
+    #     print(*get_latest_news(), sep='\n')
 
-    elif "trending movies" in query.lower():
-        speak(f"Some of the trending movies are: {get_trending_movies()}")
-        speak("For your convenience, I am printing it on the screen sir.")
-        print(*get_trending_movies(), sep='\n')
-
-    elif 'news' in query.lower():
-        speak(f"I'm reading out the latest news headlines, sir")
-        speak(get_latest_news())
-        speak("For your convenience, I am printing it on the screen sir.")
-        print(*get_latest_news(), sep='\n')
-
+wishMe()
 main()
