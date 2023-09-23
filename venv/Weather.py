@@ -4,6 +4,7 @@
 
 import requests
 import json
+from Keys import weather_key
 
 
 class Weather_:
@@ -13,7 +14,7 @@ class Weather_:
 
 
     city_name = input("Enter city:")
-    API_key = '6af77e2869f7fe9c97d32d743ded2eea'
+    API_key = weather_key
     api_geocoding = f'http://api.openweathermap.org/geo/1.0/direct?q={city_name}&appid={API_key}'
     response = requests.get(api_geocoding)
     json_data = json.loads(response.text)

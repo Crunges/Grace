@@ -4,8 +4,7 @@
 
 import requests
 import json
-
-
+from Keys import converter_key
 
 
 class Convert_:
@@ -31,7 +30,7 @@ class Convert_:
     def convert(self):
         payload = {}
         headers = {
-            "apikey": "3x8h3ELNU3M5JQLSwgG4rBxUovHGVtZ1"
+            "apikey": converter_key
         }
         response = requests.request("GET", url, headers=headers, data=payload)
         result = response.text

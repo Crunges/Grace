@@ -1,11 +1,12 @@
 import telebot
 import openai
+from Keys import KEY, telegram_token
 
 
-telegram_key = '5863970476:AAF9LxbciAcMCRWXjUmabap1lftwZjYFeA4'
-openai.api_key = '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'
-
+telegram_key = telegram_token
+openai.api_key = KEY
 bot = telebot.TeleBot(telegram_key)
+
 
 @bot.message_handler(commands=['start'])
 def Hello(message):
